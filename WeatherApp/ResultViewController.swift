@@ -42,6 +42,9 @@ class ResultViewController: UIViewController
 
         // Update Title of Result View
         self.title = resultCard.city
+        self.city = resultCard.city;
+        self.temperature = resultCard.temperature;
+        self.summary = resultCard.summary;
         
         // Back button in navigation bar
         let backButton = UIBarButtonItem()
@@ -65,7 +68,6 @@ class ResultViewController: UIViewController
     //
     @objc func tweet(sender: UIBarButtonItem)
     {
-        print("Tweet()")
         let temp = "\(Int(round(self.temperature)))° F"
         let tempString = "The current temperature at \(city) is \(temp)."
         let summaryString = "The weather conditions are \(summary)"

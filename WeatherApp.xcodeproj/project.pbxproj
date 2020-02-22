@@ -66,7 +66,7 @@
 		C97582722381B36F00F55D65 /* WeeklyTabController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyTabController.swift; sourceTree = "<group>"; };
 		C9979A2B237FD96200D916B5 /* SuggestionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionCell.swift; sourceTree = "<group>"; };
 		C9A83E5C2381E2D7008567C2 /* PhotosTabController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotosTabController.swift; sourceTree = "<group>"; };
-		C9A83E62238248D7008567C2 /* WeatherCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WeatherCard.swift; path = /Users/Matt/Desktop/WeatherApp/WeatherApp/WeatherCard.swift; sourceTree = "<absolute>"; };
+		C9A83E62238248D7008567C2 /* WeatherCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WeatherCard.swift; path = /Users/mrobinson/Documents/WeatherApp/WeatherApp/WeatherCard.swift; sourceTree = "<absolute>"; };
 		C9A83E6423824A58008567C2 /* WeatherCard.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = WeatherCard.xib; sourceTree = "<group>"; };
 		C9A83E682382664C008567C2 /* DailyDataCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyDataCell.swift; sourceTree = "<group>"; };
 		C9A83E692382664C008567C2 /* DailyDataCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DailyDataCell.xib; sourceTree = "<group>"; };

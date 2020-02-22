@@ -74,14 +74,14 @@ class TodayTabController: UIViewController, UICollectionViewDelegate, UICollecti
         // Summary
         let summaryIcon = self.wIcon
         let summaryData = WeatherDataModel(propertyImage: summaryIcon, propertyValue: "", propertyName: "\(self.summary)")
-        
+
         // Humidity
         let humidityIcon = UIImage(named: "water-percent")!
         let humidityData = WeatherDataModel(propertyImage: humidityIcon, propertyValue: "\(round(self.humidity * 100)) %", propertyName: "Humidity")
         
         // Visibility
         let visibilityIcon = UIImage(named: "eye-outline")!
-        let visibilityData = WeatherDataModel(propertyImage: visibilityIcon, propertyValue: "\(self.visibility) km", propertyName: "Visibility")
+        let visibilityData = WeatherDataModel(propertyImage: visibilityIcon, propertyValue: "\(self.visibility) mi", propertyName: "Visibility")
         
         // Cloud Cover
         let cloudCoverIcon = UIImage(named: "weather-fog")!
@@ -114,7 +114,7 @@ class TodayTabController: UIViewController, UICollectionViewDelegate, UICollecti
         if("rain" == self.iconName){ self.wIcon = UIImage(named: "weather-rainy")! }
         if("snow" == self.iconName){ self.wIcon = UIImage(named: "weather-snowy")! }
         if("sleet" == self.iconName){ self.wIcon = UIImage(named: "weather-snowy-rainy")! }
-        if("wind" == self.iconName){ self.wIcon = UIImage(named: "weather-windy")! }
+        if("wind" == self.iconName){ self.wIcon = UIImage(named: "weather-windy-variant")! }
         if("fog" == iconName) { self.wIcon = UIImage(named: "weather-fog")! }
         if("cloudy" == iconName) { self.wIcon = UIImage(named: "weather-cloudy")! }
         if("partly-cloudy-day" == iconName) { self.wIcon = UIImage(named: "weather-partly-cloudy")! }
@@ -141,6 +141,11 @@ class TodayTabController: UIViewController, UICollectionViewDelegate, UICollecti
         cell.propertyValue.text = detail.propertyValue
         cell.propertyName.text = detail.propertyName
         cell.propertyImage.image = detail.propertyImage
+        
+        if(detail.propertyValue == "")
+        {
+            cell.propertyName.center.y -= 15;
+        }
         
         // Style of Cell
         cell.backgroundColor = UIColor(red:255/255, green:255/255, blue:255/255, alpha: 0.3)

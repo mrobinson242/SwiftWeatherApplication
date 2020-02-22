@@ -83,15 +83,16 @@ class CurrentViewController: UIViewController, UITableViewDelegate, UITableViewD
         self.searchBar.delegate = self
         self.navigationItem.titleView = searchBar
         
+        // Reverse Geocoder
+        self.geocoder = CLGeocoder()
+        
         // Location Information
         self.locationManager = CLLocationManager()
         self.locationManager.delegate = self
-        self.locationManager.distanceFilter = kCLDistanceFilterNone;
+        self.locationManager.distanceFilter = kCLDistanceFilterNone
         self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        self.locationManager.requestWhenInUseAuthorization();
-        self.locationManager.requestLocation()
-        
-        self.geocoder = CLGeocoder()
+        self.locationManager.requestAlwaysAuthorization()
+        self.locationManager.startUpdatingLocation()
 
         // Scroll View Initialization
         scrollView.delegate = self
@@ -129,24 +130,28 @@ class CurrentViewController: UIViewController, UITableViewDelegate, UITableViewD
         // Get Latitude/Longitude
         self.lat = String(manager.location!.coordinate.latitude)
         self.lon = String(manager.location!.coordinate.longitude)
-        
+
+        // Get Location
         let loc: CLLocation = CLLocation(latitude: manager.location!.coordinate.latitude, longitude: manager.location!.coordinate.longitude)
 
         self.geocoder.reverseGeocodeLocation(loc, completionHandler:
-        {(placemarks,error) in
-            let pm = placemarks! as [CLPlacemark]
+        {(placemark,error) in
             
-            if pm.count > 0
+            // Check for error
+            if let error = error as? CLError
             {
-                let pm = placemarks![0]
-                self.city = pm.locality!
-                let country = pm.country!
+                print("Error in getting Current Location", error)
+                return
+            }
+            else if let placemark = placemark?.first
+            {
+                self.city = placemark.locality!
+                let country = placemark.country!
                 let loc = "\(self.city), \(country)"
                 
-                // TODO: Get Correct City/State/Lat/Lon
                 self.currentCard.city = self.city
                 self.currentCard.setLocation(location: loc)
-                
+
                 // Get Dark Sky Data
                 self.getDarkSkyData(city: self.city, lat: self.lat, lon: self.lon, card: self.currentCard, isResult: false)
             }
@@ -156,46 +161,53 @@ class CurrentViewController: UIViewController, UITableViewDelegate, UITableViewD
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String)
     {
         // Get Current Location Data
-        let url = "http://octofire.us-east-2.elasticbeanstalk.com/autocomplete/?input=\(searchText)"
+        let address = "http://octofire.us-east-2.elasticbeanstalk.com/autocomplete/?input=\(searchText)"
 
-        // Request Autocomplete Data
-        Alamofire.request(url)
+        // Encode Address
+        let url = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+        
+        // Check if URL is valid
+        if let urlopen = URL(string: url!)
+        {
+            // Request Autocomplete Data
+            Alamofire.request(urlopen)
+                    
+            // Handle the response
+            .responseJSON { response in
+              guard response.result.isSuccess,
+                let value = response.result.value else {
+                  print("Error while getting Autocomplete Data: \(String(describing: response.result.error))")
+                  return
+              }
+              
+                // Get JSON Data
+                let json = JSON(value);
+
+                // Clear Existing Elements
+                self.suggestionData.removeAll()
+
+                // Iterate over predictions
+                for item in json["predictions"].arrayValue
+                {
+                    // Get suggestion data
+                    let city = item["structured_formatting"]["main_text"]
+                    let state = item["structured_formatting"]["secondary_text"]
+                    let suggestion: String = "\(city), \(state)"
+
+                    // Add Data to Suggestion List
+                    self.suggestionData.append(suggestion)
+                }
                 
-        // Handle the response
-        .responseJSON { response in
-          guard response.result.isSuccess,
-            let value = response.result.value else {
-              print("Error while getting Autocomplete Data: \(String(describing: response.result.error))")
-              return
-          }
-          
-            // Get JSON Data
-            let json = JSON(value);
-
-            // Clear Existing Elements
-            self.suggestionData.removeAll()
-
-            // Iterate over predictions
-            for item in json["predictions"].arrayValue
-            {
-                // Get suggestion data
-                let city = item["structured_formatting"]["main_text"]
-                let state = item["structured_formatting"]["secondary_text"]
-                let suggestion: String = "\(city), \(state)"
-
-                // Add Data to Suggestion List
-                self.suggestionData.append(suggestion)
-            }
-            
-            // Refresh Table
-            self.suggestionDataView.reloadData()
-            
-            if(self.searchBar.text != "") {
-                self.suggestionDataView.isHidden = false;
-                self.suggestionDataView.becomeFirstResponder()
-            }
-            else {
-                self.suggestionDataView.isHidden = true;
+                // Refresh Table
+                self.suggestionDataView.reloadData()
+                
+                if(self.searchBar.text != "") {
+                    self.suggestionDataView.isHidden = false;
+                    self.suggestionDataView.becomeFirstResponder()
+                }
+                else {
+                    self.suggestionDataView.isHidden = true;
+                }
             }
         }
     }
@@ -252,56 +264,70 @@ class CurrentViewController: UIViewController, UITableViewDelegate, UITableViewD
     func getDarkSkyData(city: String, lat: String, lon: String, card: WeatherCard, isResult: Bool)
     {
         // Get Current Location Data
-        let url = "http://octofire.us-east-2.elasticbeanstalk.com/darkSky/?lat=\(lat)&lon=\(lon)"
+        let address = "http://octofire.us-east-2.elasticbeanstalk.com/darkSky/?lat=\(lat)&lon=\(lon)"
 
-        // Request Data
-        Alamofire.request(url)
+        // Encode Address
+        let queryUrl = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
         
-        // Handle the response
-        .responseJSON { response in
-          guard response.result.isSuccess,
-            let value = response.result.value else {
-              print("Error while getting Dark Sky Data: \(String(describing: response.result.error))")
-              return
-          }
-        
-            // Get JSON Data
-            let json = JSON(value);
+        //Check if Address is valid
+        if let url = URL(string: queryUrl!)
+        {
+            // Request Data
+            Alamofire.request(url)
             
-            // Get First Sub View Properties
-            self.timezone = json["timezone"].stringValue
-            self.temperature = json["currently"]["temperature"].doubleValue
-            self.summary = json["currently"]["summary"].stringValue
-            self.weatherIconName = json["currently"]["icon"].stringValue
-
-            // Update Weather Properties
-            let humidity = json["currently"]["humidity"].doubleValue
-            let windSpeed = json["currently"]["windSpeed"].doubleValue
-            let precipitation = json["currently"]["precipIntensity"].doubleValue
-            let visibility = json["currently"]["visibility"].doubleValue
-            let pressure = json["currently"]["pressure"].doubleValue
-            let cloudCover = json["currently"]["cloudCover"].doubleValue
-            let ozone = json["currently"]["ozone"].doubleValue
-
-            // Update Card Subviews
-            card.updateFirstSubView(city: city, temp: self.temperature, summary: self.summary , iconName: self.weatherIconName)
-            card.updateSecondSubView(humidity: humidity, windSpeed: windSpeed, visibility: visibility, pressure: pressure)
-            card.updateWeatherValues(precipitation: precipitation, cloudCover: cloudCover, ozone: ozone)
+            // Handle the response
+            .responseJSON { response in
+              guard response.result.isSuccess,
+                let value = response.result.value else {
+                  print("Error while getting Dark Sky Data: \(String(describing: response.result.error))")
+                  return
+              }
             
-            // Set Weekly Properties
-            card.weeklySummary = json["daily"]["summary"].stringValue
-            card.weeklyIconName = json["daily"]["icon"].stringValue
-            
-            // Update Daily Data
-            card.updateDailyData(dailyData: json["daily"]["data"].arrayValue)
+                // Get JSON Data
+                let json = JSON(value);
+                
+                // Get First Sub View Properties
+                self.timezone = json["timezone"].stringValue
+                self.temperature = json["currently"]["temperature"].doubleValue
+                self.summary = json["currently"]["summary"].stringValue
+                self.weatherIconName = json["currently"]["icon"].stringValue
+                
+                // TODO: Remove Debug Stmt
+                print("Temp \(self.temperature)")
 
-            // Check if for Result Page
-            if(isResult) {
-                self.performSegue(withIdentifier: "showResultView", sender: self)
+                // Update Weather Properties
+                let humidity = json["currently"]["humidity"].doubleValue
+                let windSpeed = json["currently"]["windSpeed"].doubleValue
+                let precipitation = json["currently"]["precipIntensity"].doubleValue
+                let visibility = json["currently"]["visibility"].doubleValue
+                let pressure = json["currently"]["pressure"].doubleValue
+                let cloudCover = json["currently"]["cloudCover"].doubleValue
+                let ozone = json["currently"]["ozone"].doubleValue
+
+                // Update UI on Main Thread
+                DispatchQueue.main.async
+                {
+                    // Update Card Subviews
+                    card.updateFirstSubView(city: city, temp: self.temperature, summary: self.summary , iconName: self.weatherIconName)
+                    card.updateSecondSubView(humidity: humidity, windSpeed: windSpeed, visibility: visibility, pressure: pressure)
+                    card.updateWeatherValues(precipitation: precipitation, cloudCover: cloudCover, ozone: ozone)
+                    
+                    // Set Weekly Properties
+                    card.weeklySummary = json["daily"]["summary"].stringValue
+                    card.weeklyIconName = json["daily"]["icon"].stringValue
+                    
+                    // Update Daily Data
+                    card.updateDailyData(dailyData: json["daily"]["data"].arrayValue)
+                    
+                    // Check if for Result Page
+                    if(isResult) {
+                        self.performSegue(withIdentifier: "showResultView", sender: self)
+                    }
+
+                    // Show Big Spinner
+                    SwiftSpinner.hide()
+                }
             }
-
-            // Show Big Spinner
-            SwiftSpinner.hide()
         }
     }
         
@@ -453,8 +479,6 @@ class CurrentViewController: UIViewController, UITableViewDelegate, UITableViewD
             card.setMainViewController(view: self)
             card.setLocation(location: favorite)
             
-            print("Location: \(favorite)")
-
             // Split Favorite Location into parameters
             let favoriteArr = favorite.split{$0 == ","}.map(String.init)
             let favCity = favoriteArr[0]

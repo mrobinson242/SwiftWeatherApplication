@@ -83,20 +83,19 @@ class TabBarController: UITabBarController, UITabBarControllerDelegate
      //
      func getPhotos()
      {
-         let q = "\(location)"
-         let cx = "007605095661351441351:gvpfhjcomov"
-         let imgSize = "large"
-         let num = "8"
-         let searchType = "image"
-         let key = "AIzaSyCfbRMcIgw-ZY4hk1KswKN0hCaytlh3m9g"
-        
-         print ("Q: \(q)")
+        // Split Location
+        let strArray = location.split{$0 == ","}.map(String.init)
 
-         // Get Photos
-         let address = "https://www.googleapis.com/customsearch/v1?q=\(q)&cx=\(cx)&imgSize=\(imgSize)&num=\(num)&searchType=\(searchType)&key=\(key)"
-         
-         let url = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
-         
+        // Form Query
+        let query = "Skyline \(strArray[0])"
+        
+        // Create Geocode Url Address
+        let address = "http://octofire.us-east-2.elasticbeanstalk.com/googlePhotos/?location=\(query)"
+
+        // Encode Address
+        let url = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+        
+         // Check if URL is valid
          if let urlopen = URL(string: url!)
          {
              // Request Data

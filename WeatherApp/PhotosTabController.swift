@@ -36,7 +36,7 @@ class PhotosTabController: UIViewController
                 let image = UIImage(data: imageData)
                 
                 let imageView = UIImageView(image: image)
-                imageView.frame = CGRect(x: 0, y: 0 + (index*400), width: 364, height: 450)
+                imageView.frame = CGRect(x: 0, y: 0 + (index*450), width: 364, height: 450)
                 photoView.addSubview(imageView)
                 self.photoView.contentSize.height += imageView.frame.size.height
             }

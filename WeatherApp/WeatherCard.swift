@@ -137,7 +137,7 @@ class WeatherCard: UIView, UITableViewDelegate, UITableViewDataSource, NSCopying
         if("rain" == iconName){ self.icon.image = UIImage(named: "weather-rainy")! }
         if("snow" == iconName){ self.icon.image = UIImage(named: "weather-snowy")! }
         if("sleet" == iconName){ self.icon.image = UIImage(named: "weather-snowy-rainy")! }
-        if("wind" == iconName){ self.icon.image = UIImage(named: "weather-windy")! }
+        if("wind" == iconName){ self.icon.image = UIImage(named: "weather-windy-variant")! }
         if("fog" == iconName) { self.icon.image = UIImage(named: "weather-fog")! }
         if("cloudy" == iconName) { self.icon.image = UIImage(named: "weather-cloudy")! }
         if("partly-cloudy-day" == iconName) { self.icon.image = UIImage(named: "weather-partly-cloudy")! }
@@ -158,7 +158,7 @@ class WeatherCard: UIView, UITableViewDelegate, UITableViewDataSource, NSCopying
         // Update Second Sub View Values
         humidityValue.text = "\(humidity * 100)%"
         windSpeedValue.text = "\(windSpeed) mph"
-        visibilityValue.text = "\(visibility) km"
+        visibilityValue.text = "\(visibility) mi"
         pressureValue.text = "\(pressure) mb"
     }
     
@@ -178,54 +178,50 @@ class WeatherCard: UIView, UITableViewDelegate, UITableViewDataSource, NSCopying
     //
     func updateDailyData(dailyData: [JSON])
     {
-        // Create count
-        var count = 0
+        // Clear arrays
+        self.dailyData.removeAll();
+        self.weeklyTempMinData.removeAll();
+        self.weeklyTempMaxData.removeAll();
+        self.days.removeAll();
         
+        // Set Daily Data
         self.dailyData = dailyData
-
+        
         // Iterate over daily data
         for item in dailyData
         {
            // Get Min/Max Temperature Data
-           self.weeklyTempMinData.append(item["temperatureMin"].doubleValue)
-           self.weeklyTempMaxData.append(item["temperatureMax"].doubleValue)
+           self.weeklyTempMinData.append(round(item["temperatureMin"].doubleValue))
+           self.weeklyTempMaxData.append(round(item["temperatureMax"].doubleValue))
+
+           // Get Weather Icon Name
+           let iconName = item["icon"].stringValue;
+
+           // Get Sunrise/Sunset Times
+           let time = Date(timeIntervalSince1970:item["time"].doubleValue)
+           let startTime = Date(timeIntervalSince1970:item["sunriseTime"].doubleValue)
+           let endTime = Date(timeIntervalSince1970:item["sunsetTime"].doubleValue)
+
+           // Date Formatter
+           let dateFormatter = DateFormatter()
+           dateFormatter.timeZone = TimeZone(abbreviation: "PST")
+           dateFormatter.dateFormat = "MM/dd/YYYY"
+           let date = dateFormatter.string(from: time)
            
-           // Exclude Today
-           if(count != 0)
-           {
-               // Get Weather Icon Name
-               let iconName = item["icon"].stringValue;
+           // Sunrise/Sunset Date Formatter
+           let sunDateFormatter = DateFormatter()
+           sunDateFormatter.timeZone = TimeZone(abbreviation: "PST")
+           sunDateFormatter.dateFormat = "HH:mm"
+           sunDateFormatter.locale = NSLocale.current
 
-               // Get Sunrise/Sunset Times
-               let time = Date(timeIntervalSince1970:item["time"].doubleValue)
-               let startTime = Date(timeIntervalSince1970:item["sunriseTime"].doubleValue)
-               let endTime = Date(timeIntervalSince1970:item["sunsetTime"].doubleValue)
-               
-              
-               // Date Formatter
-               let dateFormatter = DateFormatter()
-               dateFormatter.timeZone = TimeZone(abbreviation: "PST")
-               dateFormatter.dateFormat = "MM/dd/YYYY"
-               let date = dateFormatter.string(from: time)
-               
-               // Sunrise/Sunset Date Formatter
-               let sunDateFormatter = DateFormatter()
-               sunDateFormatter.timeZone = TimeZone(abbreviation: "PST")
-               sunDateFormatter.dateFormat = "HH:mm"
-               sunDateFormatter.locale = NSLocale.current
-
-               // Get Sunrise Time
-               let sunriseTime = sunDateFormatter.string(from: startTime)
-               
-               // Get Sunset Time
-               let sunsetTime = sunDateFormatter.string(from: endTime)
-
-               // Add Day to Table
-               loadDay(date: date, iconName: iconName, sunrise: sunriseTime, sunset: sunsetTime)
-           }
+           // Get Sunrise Time
+           let sunriseTime = sunDateFormatter.string(from: startTime)
            
-           // Increment Counter
-           count += 1
+           // Get Sunset Time
+           let sunsetTime = sunDateFormatter.string(from: endTime)
+
+           // Add Day to Table
+           loadDay(date: date, iconName: iconName, sunrise: sunriseTime, sunset: sunsetTime)
        }
        
        // Refresh Table
